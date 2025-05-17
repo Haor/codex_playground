@@ -14,7 +14,7 @@ Install requirements and run tests:
 
 ```bash
 pip install -r requirements.txt
-pytest -q
+PYTHONPATH=. pytest -q
 ```
 
 Run the demo GUI:
@@ -22,3 +22,17 @@ Run the demo GUI:
 ```bash
 python main.py
 ```
+
+The controller exposes a `backup(project, dest_zip)` method which saves the registry and AppData for the given Unity project into the provided zip file.
+
+
+## Building an Installer
+
+Create a standalone Windows executable using PyInstaller:
+
+```bash
+pip install pyinstaller
+python build_installer.py
+```
+
+The resulting `VRChatAccountManager.exe` is placed in the `dist/` directory.

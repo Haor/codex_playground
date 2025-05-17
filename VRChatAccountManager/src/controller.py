@@ -17,13 +17,25 @@ class Controller:
     def refresh_model(self) -> tuple[list[str], list[db.Account]]:
         return reg.list_projects(), db.list_accounts()
 
-    def backup(self, project: str) -> Path:
+    def backup(self, project: str, dest_zip: Path | None = None) -> Path:
+        """Backup registry and AppData for a project.
+
+        Parameters
+        ----------
+        project: str
+            Name of the Unity product to back up.
+        dest_zip: Path | None, optional
+            Destination zip file. If omitted, a file named
+            ``<project>_app.zip`` is created inside ``backup_dir``.
+        """
+
         data = reg.export_project(project)
         reg_path = self.backup_dir / f"{project}_reg.json"
         reg_path.write_text(json.dumps(data))
-        zip_path = self.backup_dir / f"{project}_app.zip"
-        ads.backup_product(project, zip_path)
-        return zip_path
+        if dest_zip is None:
+            dest_zip = self.backup_dir / f"{project}_app.zip"
+        ads.backup_product(project, dest_zip)
+        return dest_zip
 
     def switch_account(self, project: str, acc_id: int) -> None:
         accounts = {a.id: a for a in db.list_accounts()}
