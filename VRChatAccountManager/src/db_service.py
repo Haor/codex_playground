@@ -56,3 +56,18 @@ def bind_account_to_project(acc_id: int, product: str) -> None:
         binding = Binding(account_id=acc_id, product_name=product)
         session.add(binding)
         session.commit()
+
+
+def delete_account(acc_id: int) -> None:
+    """Remove an account and any bindings."""
+    with _get_session() as session:
+        acc = session.get(Account, acc_id)
+        if not acc:
+            return
+        binds = list(
+            session.exec(select(Binding).where(Binding.account_id == acc_id))
+        )
+        for b in binds:
+            session.delete(b)
+        session.delete(acc)
+        session.commit()
