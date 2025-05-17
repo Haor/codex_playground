@@ -11,8 +11,9 @@ from PySide6.QtWidgets import (
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
+        self.controller = controller
         self.setWindowTitle("VRChat Account Manager")
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -23,15 +24,21 @@ class MainWindow(QMainWindow):
         layout.addWidget(QLabel("Accounts"))
         layout.addWidget(self.accounts)
         self.setCentralWidget(central)
+        self.refresh()
 
-    def load_demo(self):
-        self.projects.addItems(["DemoProjectA", "DemoProjectB"])
-        self.accounts.addItems(["alice", "bob"])
+    def refresh(self):
+        projects, accounts = self.controller.refresh_model()
+        self.projects.clear()
+        self.projects.addItems(projects)
+        self.accounts.clear()
+        self.accounts.addItems([a.username for a in accounts])
 
 
 if __name__ == "__main__":
+    from VRChatAccountManager.src.controller import Controller
+
     app = QApplication([])
-    w = MainWindow()
-    w.load_demo()
+    controller = Controller()
+    w = MainWindow(controller)
     w.show()
     app.exec()
