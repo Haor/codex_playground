@@ -1,0 +1,5 @@
+PySide6
+pycryptodome
+SQLModel
+pytest
+pyinstaller>=6
