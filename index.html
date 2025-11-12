@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fret Compass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="app-header">
+      <div class="brand">
+        <h1 class="brand__title">Fret Compass</h1>
+        <p class="brand__subtitle">建立音名 · 数字 · 唱名的指板导航</p>
+      </div>
+      <div class="header-controls">
+        <label class="key-select">
+          <span class="key-select__label">选择调性</span>
+          <select id="keySelect" aria-label="选择调性">
+            <option value="C 大调">C 大调</option>
+            <option value="G 大调">G 大调</option>
+            <option value="D 大调">D 大调</option>
+            <option value="A 大调">A 大调</option>
+            <option value="E 大调">E 大调</option>
+            <option value="B 大调">B 大调</option>
+            <option value="F# 大调">F# 大调</option>
+            <option value="C# 大调">C# 大调</option>
+          </select>
+        </label>
+        <button id="historyButton" class="ghost-button" type="button" aria-haspopup="dialog">练习记录</button>
+        <button id="themeToggle" class="ghost-button" type="button" aria-pressed="false" aria-label="切换主题">夜间模式</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="practice-modes" aria-labelledby="modesHeading">
+        <div class="section-header">
+          <h2 id="modesHeading">练习模式</h2>
+          <button id="summaryToggle" class="ghost-button" type="button" aria-expanded="false">查看上次练习总结</button>
+        </div>
+        <div id="lastSummary" class="summary-card" hidden aria-live="polite"></div>
+        <div class="mode-grid">
+          <article class="mode-card" data-mode="sprint">
+            <header>
+              <h3>冲刺模式</h3>
+              <p>10 题限时冲刺，快速热身。</p>
+            </header>
+            <p class="mode-meta">自动记录正确率与反应时间。</p>
+            <button type="button" class="primary-button mode-trigger" aria-label="开始冲刺模式">开始冲刺</button>
+          </article>
+          <article class="mode-card" data-mode="endless">
+            <header>
+              <h3>无限模式</h3>
+              <p>无题量上限，持续刷题。</p>
+            </header>
+            <p class="mode-meta">适合长时间巩固，随时可结束。</p>
+            <button type="button" class="primary-button mode-trigger" aria-label="开始无限模式">开始无限</button>
+          </article>
+          <article class="mode-card" data-mode="custom">
+            <header>
+              <h3>定制模式</h3>
+              <p>根据训练目标自定义题量与内容。</p>
+            </header>
+            <p class="mode-meta">需要先保存设置抽屉。</p>
+            <button type="button" class="primary-button mode-trigger" aria-label="开始定制模式">进入定制</button>
+          </article>
+          <article class="mode-card" data-mode="mistakes">
+            <header>
+              <h3>错题回放</h3>
+              <p>针对错题进行集中复习。</p>
+            </header>
+            <p class="mode-meta">仅在存在错题时可用。</p>
+            <button type="button" class="primary-button mode-trigger" aria-label="开始错题回放">开始回放</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="workspace" class="practice-workspace" hidden>
+        <aside class="workspace-sidebar" aria-label="练习侧栏">
+          <div class="sidebar-row">
+            <span class="label">当前模式</span>
+            <span id="sessionMode" class="value">—</span>
+          </div>
+          <div class="sidebar-row">
+            <span class="label">题目进度</span>
+            <span id="sessionProgress" class="value">—</span>
+          </div>
+          <div class="sidebar-row">
+            <span class="label">当前调性</span>
+            <span id="sessionKey" class="value">—</span>
+          </div>
+          <div class="sidebar-row">
+            <span class="label">正确率</span>
+            <span id="sessionAccuracy" class="value">—</span>
+          </div>
+          <div class="sidebar-row">
+            <span class="label">最长连对</span>
+            <span id="sessionStreak" class="value">—</span>
+          </div>
+          <div class="sidebar-row">
+            <span class="label">平均反应</span>
+            <span id="sessionAverage" class="value">—</span>
+          </div>
+          <div class="mistake-preview" aria-live="polite">
+            <div class="mistake-preview__header">
+              <h4>错题预告</h4>
+              <button type="button" id="markMastered" class="ghost-button" aria-label="标记错题已掌握">标记已掌握</button>
+            </div>
+            <ul id="mistakeList"></ul>
+          </div>
+        </aside>
+
+        <section class="workspace-main" aria-live="polite">
+          <article class="question-card">
+            <div class="question-card__header">
+              <span id="questionTag" class="tag">—</span>
+              <span id="questionTimer" class="timer" aria-live="polite">0.0s</span>
+            </div>
+            <h3 id="questionPrompt" class="question-text">请选择模式以开始练习。</h3>
+            <div class="options" role="group" aria-label="答案选项">
+              <button type="button" class="option-button" data-index="0"></button>
+              <button type="button" class="option-button" data-index="1"></button>
+              <button type="button" class="option-button" data-index="2"></button>
+              <button type="button" class="option-button" data-index="3"></button>
+            </div>
+            <p id="questionFeedback" class="question-feedback" aria-live="polite"></p>
+          </article>
+          <article class="fretboard-card" aria-label="吉他指板提示">
+            <header class="fretboard-card__header">
+              <h4>指板提示</h4>
+              <p id="fretboardHint" class="hint-text">回答后将显示对应位置。</p>
+            </header>
+            <div id="fretboard" class="fretboard" aria-hidden="true"></div>
+            <p id="fretboardCaption" class="fretboard-caption">悬停音符查看位置详情</p>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-actions">
+        <button type="button" id="settingsButton" class="ghost-button" aria-controls="settingsDrawer" aria-expanded="false">练习设置</button>
+        <button type="button" id="dataButton" class="ghost-button" aria-haspopup="dialog">数据管理</button>
+        <button type="button" id="endSessionButton" class="danger-button">结束练习</button>
+      </div>
+      <p class="footer-tagline">让音名、数字、唱名在指板上自然呼吸。</p>
+    </footer>
+  </div>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite" role="status"></div>
+
+  <aside id="settingsDrawer" class="settings-drawer" aria-hidden="true">
+    <div class="drawer-panel" role="dialog" aria-modal="false" aria-labelledby="settingsTitle">
+      <header class="drawer-header">
+        <h2 id="settingsTitle">练习设置</h2>
+        <button type="button" class="ghost-button drawer-close" data-close="settingsDrawer" aria-label="关闭设置">关闭</button>
+      </header>
+      <form id="settingsForm">
+        <fieldset>
+          <legend>题量</legend>
+          <div class="quantity-grid">
+            <label><input type="radio" name="questionCount" value="10">10 题</label>
+            <label><input type="radio" name="questionCount" value="20">20 题</label>
+            <label><input type="radio" name="questionCount" value="30">30 题</label>
+            <label class="custom-input">自定义 <input type="number" id="customQuantity" min="5" max="200" step="5" placeholder="5-200"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>题目内容</legend>
+          <label><input type="checkbox" name="includeNoteLetter" checked> 包含音名</label>
+          <label><input type="checkbox" name="includeScaleDegree" checked> 包含数字</label>
+          <label><input type="checkbox" name="includeSolfege" checked> 包含唱名</label>
+          <label><input type="checkbox" name="includeOctave"> 显示八度</label>
+        </fieldset>
+        <fieldset>
+          <legend>练习偏好</legend>
+          <label><input type="checkbox" name="showFretHint" checked> 答案后显示指板提示</label>
+          <label><input type="checkbox" name="enableTimer" checked> 启用计时器</label>
+          <label><input type="checkbox" name="shuffleOptions" checked> 打乱选项顺序</label>
+        </fieldset>
+        <div class="drawer-actions">
+          <button type="submit" class="primary-button">保存设置</button>
+          <button type="button" class="ghost-button" data-close="settingsDrawer">取消</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <dialog id="historyModal" class="modal" aria-labelledby="historyTitle">
+    <form method="dialog" class="modal__inner">
+      <header class="modal__header">
+        <h2 id="historyTitle">练习记录</h2>
+        <button type="submit" class="ghost-button" aria-label="关闭练习记录">关闭</button>
+      </header>
+      <div id="historyList" class="modal__content" aria-live="polite"></div>
+    </form>
+  </dialog>
+
+  <dialog id="dataModal" class="modal" aria-labelledby="dataTitle">
+    <form method="dialog" class="modal__inner">
+      <header class="modal__header">
+        <h2 id="dataTitle">数据管理</h2>
+        <button type="submit" class="ghost-button" aria-label="关闭数据管理">关闭</button>
+      </header>
+      <div class="modal__content">
+        <section>
+          <h3>统计信息</h3>
+          <ul id="dataStats" class="data-stats"></ul>
+        </section>
+        <section class="data-actions">
+          <button type="button" id="exportButton" class="ghost-button">导出 JSON</button>
+          <label class="file-input">导入 JSON<input type="file" id="importInput" accept="application/json"></label>
+          <button type="button" id="viewMistakesButton" class="ghost-button">查看错题摘要</button>
+          <button type="button" id="viewHistoryButton" class="ghost-button">查看历史摘要</button>
+          <button type="button" id="clearMistakesButton" class="ghost-button">清除错题</button>
+          <button type="button" id="seedMistakesButton" class="ghost-button">添加测试错题</button>
+          <button type="button" id="clearHistoryButton" class="ghost-button">清除历史</button>
+          <button type="button" id="clearAllButton" class="danger-button">清除全部数据</button>
+        </section>
+        <textarea id="dataPreview" class="data-preview" rows="6" readonly aria-label="数据摘要"></textarea>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="sessionSummary" class="session-summary" aria-live="polite" hidden></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
